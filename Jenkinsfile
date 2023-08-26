@@ -39,13 +39,13 @@ pipeline {
             }
         }
 
-        // stage('Deploy to Server') {
-        //     steps {
-        //         script {
-        //             sh 'ng serve'  // Or 'ng serve' depending on your setup
-        //         }
-        //     }
-        // }
+        stage('Deploy to Server') {
+            steps {
+                script {
+                    sh 'ng serve'  // Or 'ng serve' depending on your setup
+                }
+            }
+        }
     }
 
     post {
