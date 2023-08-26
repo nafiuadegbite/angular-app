@@ -48,16 +48,9 @@ pipeline {
         }
     }
 
-     post {
-        success {
-            echo 'Deployment succeeded!'
-        }
-        failure {
-            echo 'Deployment failed! Stopping pipeline...'
-            currentBuild.result = 'FAILURE'
-        }
+    post {
         always {
-            cleanWs()
+            cleanWs()  // Clean up workspace after the build
         }
     }
 }
