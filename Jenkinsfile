@@ -27,7 +27,7 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh 'npm run build'  // Or 'ng build' depending on your setup
+                    sh 'ng build'  // Or 'ng build' depending on your setup
                 }
             }
         }
@@ -39,8 +39,11 @@ pipeline {
         }
 
         stage('Deploy to Server') {
-            // Add deployment steps here if needed
-            // You can use SSH, SCP, or other tools to deploy the built artifacts to a server
+            steps {
+                script {
+                    sh 'ng serve'  // Or 'ng serve' depending on your setup
+                }
+            }
         }
     }
 
