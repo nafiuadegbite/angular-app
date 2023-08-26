@@ -69,7 +69,7 @@ def waitForCompilation() {
     
     for (int i = 0; i < maxAttempts; i++) {
         def compileOutput = sh(returnStdout: true, script: 'ng build --prod')
-        if (compileOutput.contains('Complied successfully.')) {
+        if (compileOutput.contains('Compiled successfully.')) {
             return 'success'
         }
         sleep sleepDuration
