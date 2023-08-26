@@ -1,36 +1,52 @@
 pipeline {
-    agent none
+    agent any
+
+    environment {
+        // Customize environment variables if needed
+        NODE_HOME = tool 'NodeJS'
+    }
+
     stages {
-        stage('Fetch dependencies') {
-            agent {
-                docker 'circleci/node:9.3-stretch-browsers'
-            }
+        stage('Checkout') {
             steps {
-                sh 'yarn'
-                stash includes: 'node_modules/', name: 'node_modules'
+                checkout scm
             }
         }
-        stage('Compile') {
-            agent{
-                docker 'circleci/node:9.3-stretch-browsers'
-            }
-            steps{
-                unstash 'node_modules'
-                sh 'yarn build:prod'
-                stash includes: 'dist/', name: 'dist'
+
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    def npmHome = tool name: 'NodeJS', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
+                    def npmBin = "${npmHome}/bin"
+                    env.PATH = "${npmBin}:${env.PATH}"
+                    sh 'npm install'
+                }
             }
         }
-        stage('Build and Push Docker Image') {
-            agent any
-            environment {
-                DOCKER_PUSH = credentials('docker_push')
+
+        stage('Build') {
+            steps {
+                script {
+                    sh 'npm run build'  // Or 'ng build' depending on your setup
+                }
             }
-            steps{
-                unstash 'dist'
-                sh 'docker build -t $DOCKER_PUSH_URL/frontend .'
-                sh 'docker login -u $DOCKER_PUSH_USR -p $DOCKER_PUSH_PSW $DOCKER_PUSH_URL'
-                sh 'docker push $DOCKER_PUSH_URL/frontend'
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'dist/**', allowEmptyArchive: true
             }
+        }
+
+        stage('Deploy to Server') {
+            // Add deployment steps here if needed
+            // You can use SSH, SCP, or other tools to deploy the built artifacts to a server
+        }
+    }
+
+    post {
+        always {
+            cleanWs()  // Clean up workspace after the build
         }
     }
 }
