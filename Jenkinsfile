@@ -51,7 +51,7 @@ pipeline {
 
 def deployAppToServer() {
     script {
-        sh 'nohup ng serve --prod &'
+        sh 'ng serve'
         def compilationStatus = waitForCompilation()
         
         if (compilationStatus == 'success') {
