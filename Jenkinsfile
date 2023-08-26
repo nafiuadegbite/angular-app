@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Customize environment variables if needed
         GIT_HOME = tool 'Git'
         NODE_HOME = tool 'NodeJS'
     }
@@ -17,9 +16,8 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    def npmHome = tool name: 'NodeJS', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
-                    def npmBin = "${npmHome}/bin"
-                    env.PATH = "${npmBin}:${env.PATH}"
+                    def npmHome = tool(name: 'NodeJS', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation')
+                    env.PATH = "${npmHome}/bin:${env.PATH}"
                     sh 'npm install'
                 }
             }
@@ -27,9 +25,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                script {
-                    sh 'ng build'  // Or 'ng build' depending on your setup
-                }
+                sh 'ng build'
             }
         }
 
@@ -41,16 +37,42 @@ pipeline {
 
         stage('Deploy to Server') {
             steps {
-                script {
-                    sh 'ng serve'  // Or 'ng serve' depending on your setup
-                }
+                deployAppToServer()
             }
         }
     }
 
     post {
         always {
-            cleanWs()  // Clean up workspace after the build
+            cleanWs()
         }
     }
+}
+
+def deployAppToServer() {
+    script {
+        sh 'nohup ng serve --prod &'
+        def compilationStatus = waitForCompilation()
+        
+        if (compilationStatus == 'success') {
+            sh 'pkill -f "ng serve"'
+            echo 'Angular app compiled successfully and server stopped.'
+        } else {
+            echo 'Angular app compilation failed.'
+        }
+    }
+}
+
+def waitForCompilation() {
+    def maxAttempts = 60
+    def sleepDuration = 10
+    
+    for (int i = 0; i < maxAttempts; i++) {
+        def compileOutput = sh(returnStdout: true, script: 'ng build --prod')
+        if (compileOutput.contains('Complied successfully.')) {
+            return 'success'
+        }
+        sleep sleepDuration
+    }
+    return 'failure'
 }
