@@ -35,11 +35,6 @@ pipeline {
             }
         }
 
-        stage('Deploy to Server') {
-            steps {
-                deployAppToServer()
-            }
-        }
     }
 
     post {
@@ -49,30 +44,3 @@ pipeline {
     }
 }
 
-def deployAppToServer() {
-    script {
-        sh 'ng serve'
-        def compilationStatus = waitForCompilation()
-        
-        if (compilationStatus == 'success') {
-            sh 'pkill -f "ng serve"'
-            echo 'Angular app compiled successfully and server stopped.'
-        } else {
-            echo 'Angular app compilation failed.'
-        }
-    }
-}
-
-def waitForCompilation() {
-    def maxAttempts = 60
-    def sleepDuration = 10
-    
-    for (int i = 0; i < maxAttempts; i++) {
-        def compileOutput = sh(returnStdout: true, script: 'ng build --prod')
-        if (compileOutput.contains('Compiled successfully.')) {
-            return 'success'
-        }
-        sleep sleepDuration
-    }
-    return 'failure'
-}
